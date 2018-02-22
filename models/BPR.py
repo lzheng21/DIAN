@@ -1,20 +1,20 @@
 import tensorflow as tf
 import utils as ut
 import numpy as np
-
+from losses import *
 class BPR(object):
-    def __init__(self, n_users, n_items, emb_dim, lr, batch_size, decay):
-        self.n_users = n_users
-        self.n_items = n_items
+    def __init__(self, data, emb_dim, lr, batch_size, lambda_u, lambda_v):
+        self.name = 'BPR'
+        self.n_users, self.n_items = data.get_num_users_items()
         self.emb_dim = emb_dim
 
         self.batch_size = batch_size
-        self.negative_size = 1
-        self.decay = decay
 
         # placeholder definition
         self.users = tf.placeholder(tf.int32, shape=(self.batch_size,))
-        self.items = tf.placeholder(tf.int32, shape=(self.batch_size * (1 + self.negative_size),))
+        self.pos_items = tf.placeholder(tf.int32, shape=(self.batch_size,))
+        self.neg_items = tf.placeholder(tf.int32, shape=(self.batch_size,))
+
 
         self.user_embeddings = tf.Variable(
             tf.random_normal([self.n_users, self.emb_dim], dtype=tf.float32),
@@ -29,31 +29,14 @@ class BPR(object):
         self.all_ratings = tf.matmul(self.u_embeddings, self.item_embeddings, transpose_a=False,
                                     transpose_b=True)
 
-        self.h_user = tf.gather(self.user_embeddings, self.users)
-        self.h_item = tf.gather(self.item_embeddings, self.items)
-        self.loss = self.create_loss(self.h_user, self.h_item)
+        self.pos_item_embeddings = tf.gather(self.item_embeddings, self.pos_items)
+        self.neg_item_embeddings = tf.gather(self.item_embeddings, self.neg_items)
+
+        self.loss = bpr_loss(self.user_embeddings, self.pos_item_embeddings, self.neg_item_embeddings, lambda_u, lambda_v)
 
         self.params = [self.user_embeddings, self.item_embeddings]
         self.opt = tf.train.AdamOptimizer(lr)
         self.updates = self.opt.minimize(self.loss, var_list=self.params)
-
-    def create_loss(self, users, items):
-        losses = []
-
-        for u, i in zip(tf.split(users, num_or_size_splits=self.batch_size, axis=0),
-                        tf.split(items, num_or_size_splits=self.batch_size, axis=0)):
-            pos = tf.gather(i,0)
-            neg = tf.gather(i,1)
-            pos_score = tf.reduce_sum(tf.multiply(u, pos))
-            neg_score = tf.reduce_sum(tf.multiply(u, neg))
-
-            # Loss function using L2 Regularization
-            regularizer = tf.nn.l2_loss(u) + tf.nn.l2_loss(pos) + tf.nn.l2_loss(neg)
-            maxi = tf.log(tf.nn.sigmoid(pos_score - neg_score)) - self.decay * regularizer
-            #loss = tf.negative(maxi) + decay * regularizer
-            losses.append(maxi)
-
-        return tf.negative(tf.reduce_mean(tf.stack(losses)))
 
 
 

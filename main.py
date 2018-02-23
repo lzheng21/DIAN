@@ -2,8 +2,6 @@ import random
 from load_data import *
 from models.BPR import *
 import tensorflow as tf
-from prediction import *
-from train import *
 #########################################################################################
 # Hyper-parameters
 #########################################################################################
@@ -19,6 +17,6 @@ DIR = 'data/ml-1m/'
 
 
 data_generator = Data(batch_size=BATCH_SIZE, train_file=DIR+'train_users.dat', test_file=DIR+'test_users.dat')
-model = BPR(data_generator, EMB_DIM, LR, BATCH_SIZE, lambda_u=lambda_u, lambda_v=lambda_v)
-sess = train(model,data_generator, N_EPOCH)
-predict(sess, model, data_generator)
+model = BPR(data_generator, EMB_DIM, BATCH_SIZE, lambda_u=lambda_u, lambda_v=lambda_v)
+sess = model.train(N_EPOCH, lr=LR)
+model.predict()

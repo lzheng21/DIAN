@@ -1,5 +1,46 @@
 import numpy as np
 
+def test_one_user(x):
+    # user u's ratings for user u
+    rating = x[0]
+    #uid
+    u = x[1]
+    data_generator = x[2]
+    #user u's items in the training set
+    training_items = data_generator.train_items[u]
+    #user u's items in the test set
+    user_pos_test = data_generator.test_set[u]
+
+    all_items = set(range(data_generator.n_items))
+
+    test_items = list(all_items - set(training_items))
+    item_score = []
+    for i in test_items:
+        item_score.append((i, rating[i]))
+
+    item_score = sorted(item_score, key=lambda x: x[1])
+    item_score.reverse()
+    item_sort = [x[0] for x in item_score]
+
+    r = []
+    for i in item_sort:
+        if i in user_pos_test:
+            r.append(1)
+        else:
+            r.append(0)
+
+    p_3 = np.mean(r[:3])
+
+    ndcg_3 = ndcg_at_k(r, 3)
+
+    recall_5 = recall(item_sort, user_pos_test, 5)
+    recall_10 = recall(item_sort, user_pos_test, 10)
+    recall_50 = recall(item_sort, user_pos_test, 50)
+    ap = average_precision(r)
+
+
+    return np.array([p_3, ndcg_3, recall_5, recall_10, recall_50, ap])
+
 
 def normalize_adj(adj):
     s = 1/adj.sum(1)

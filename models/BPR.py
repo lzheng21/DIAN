@@ -11,7 +11,6 @@ class BPR(object):
         self.emb_dim = emb_dim
         self.batch_size = batch_size
 
-
         # placeholder definition
         self.users = tf.placeholder(tf.int32, shape=(self.batch_size,))
         self.pos_items = tf.placeholder(tf.int32, shape=(self.batch_size,))

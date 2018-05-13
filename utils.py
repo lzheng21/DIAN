@@ -6,10 +6,12 @@ def test_one_user(x):
     #uid
     u = x[1]
     data_generator = x[2]
+    mode = x[3]
+
     #user u's items in the training set
     training_items = data_generator.train_items[u]
     #user u's items in the test set
-    user_pos_test = data_generator.test_set[u]
+    user_pos_test = data_generator.test_set[u] + data_generator.val_set[u]#data_generator.test_set[u] if mode == 0 else data_generator.val_set[u]
 
     all_items = set(range(data_generator.n_items))
 
@@ -33,22 +35,10 @@ def test_one_user(x):
 
     ndcg_3 = ndcg_at_k(r, 3)
 
-    recall_5 = recall(item_sort, user_pos_test, 5)
-    recall_10 = recall(item_sort, user_pos_test, 10)
-    recall_50 = recall(item_sort, user_pos_test, 50)
     ap = average_precision(r)
 
 
-    return np.array([p_3, ndcg_3, recall_5, recall_10, recall_50, ap])
-
-
-def normalize_adj(adj):
-    s = 1/adj.sum(1)
-    s[np.isnan(s)] = 0.0
-    s[np.isinf(s)] = 0.0
-    d = np.diag(s)#np.diag(np.power(np.array(adj.sum(1)), -1).flatten(), 0)
-    a_norm = d.dot(adj)
-    return a_norm
+    return np.array([p_3, ndcg_3, ap])
 
 
 def recall(rank, ground_truth, N):

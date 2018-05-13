@@ -8,8 +8,8 @@ def bpr_loss(users, pos_items, neg_items, lambda_u, lambda_v):
 
         # Loss function using L2 Regularization
         l2_loss = lambda_u*tf.nn.l2_loss(u) + lambda_v*tf.nn.l2_loss(pos) + lambda_v*tf.nn.l2_loss(neg)
-        maxi = tf.log(tf.nn.sigmoid(pos_score - neg_score)) - l2_loss
+        maxi = tf.log(tf.nn.sigmoid(pos_score - neg_score))
         # loss = tf.negative(maxi) + decay * regularizer
-        losses.append(maxi)
+        losses.append(tf.negative(maxi) + l2_loss)
 
-    return tf.negative(tf.reduce_mean(tf.stack(losses)))
+    return tf.reduce_mean(tf.stack(losses))

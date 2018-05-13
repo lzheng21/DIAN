@@ -2,8 +2,10 @@ import tensorflow as tf
 import utils as ut
 import numpy as np
 from losses import *
+import multiprocessing
+
 class BPR(object):
-    def __init__(self, data, emb_dim, batch_size, lambda_u, lambda_v):
+    def __init__(self, data, emb_dim, batch_size, lambda_u=0.001, lambda_v=0.001):
         self.data = data
         self.n_users, self.n_items = self.data.get_num_users_items()
         self.emb_dim = emb_dim
@@ -15,16 +17,15 @@ class BPR(object):
         self.pos_items = tf.placeholder(tf.int32, shape=(self.batch_size,))
         self.neg_items = tf.placeholder(tf.int32, shape=(self.batch_size,))
 
-
         self.user_embeddings = tf.Variable(
-            tf.random_normal([self.n_users, self.emb_dim], dtype=tf.float32),
+            tf.random_normal([self.n_users, self.emb_dim], mean=0.01, stddev=0.02, dtype=tf.float32),
             name='user_embeddings')
         self.item_embeddings = tf.Variable(
-            tf.random_normal([self.n_items, self.emb_dim], dtype=tf.float32),
+            tf.random_normal([self.n_items, self.emb_dim], mean=0.01, stddev=0.02, dtype=tf.float32),
             name='item_embeddings')
 
 
-        self.u_embeddings = tf.nn.embedding_lookup(self.user_embeddings, self.users)
+        self.u_embeddings = tf.gather(self.user_embeddings, self.users)
 
         self.all_ratings = tf.matmul(self.u_embeddings, self.item_embeddings, transpose_a=False,
                                     transpose_b=True)
@@ -32,12 +33,16 @@ class BPR(object):
         self.pos_item_embeddings = tf.gather(self.item_embeddings, self.pos_items)
         self.neg_item_embeddings = tf.gather(self.item_embeddings, self.neg_items)
 
-        self.loss = bpr_loss(self.user_embeddings, self.pos_item_embeddings, self.neg_item_embeddings, lambda_u, lambda_v)
+        self.loss = bpr_loss(self.u_embeddings, self.pos_item_embeddings, self.neg_item_embeddings, lambda_u, lambda_v)
 
         self.params = [self.user_embeddings, self.item_embeddings]
 
-    def train(self, n_epoch, lr):
-        self.opt = tf.train.AdamOptimizer(lr)
+    def train(self, n_epoch, lr, optimizer):
+        assert optimizer in {'Adam', 'SGD'}
+
+        if optimizer == 'Adam': self.opt = tf.train.AdamOptimizer(lr)
+        if optimizer == 'SGD': self.opt = tf.train.GradientDescentOptimizer(lr)
+
         self.updates = self.opt.minimize(self.loss, var_list=self.params)
 
         config = tf.ConfigProto()
@@ -46,22 +51,27 @@ class BPR(object):
         self.sess.run(tf.global_variables_initializer())
 
         for epoch in range(n_epoch):
-            users, pos_items, neg_items = self.data.sample_pairs()
+            users, pos_items, neg_items = self.data.sample_pairs(self.batch_size)
             _, loss = self.sess.run([self.updates, self.loss],
                                    feed_dict={self.users: users,
                                               self.pos_items: pos_items,
                                               self.neg_items: neg_items})
 
-            print('\rEpoch %d training loss %f' % (epoch, loss), end='')
+            ret = self.predict(mode=1)
+            p_3, ndcg_3, MAP = ret[0], ret[1], ret[2]
+            print('\rEpoch %d training loss %f val Precision_3 %f val NDCG_3 %f val MAP %f' % \
+                  (epoch, loss, p_3, ndcg_3, MAP), end='')
 
-    def predict(self):
-        result = np.array([0.] * 6)
-        import multiprocessing
+
+
+    def predict(self,mode=0):
+        result = np.array([0.] * 3)
         cores = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(cores)
 
         # all users needed to test
-        test_users = self.data.test_set.keys()
+        test_users = list(self.data.test_set.keys()) if mode == 0 else list(self.data.val_set.keys())
+
         test_user_num = len(test_users)
         index = 0
         while True:
@@ -75,7 +85,7 @@ class BPR(object):
                 user_batch_len = len(user_batch)
                 FLAG = True
             user_batch_rating = self.sess.run(self.all_ratings, {self.users: user_batch})
-            user_batch_rating_uid = zip(user_batch_rating, user_batch, [self.data] * self.batch_size)
+            user_batch_rating_uid = zip(user_batch_rating, user_batch, [self.data] * self.batch_size, [mode]*self.batch_size)
             batch_result = pool.map(ut.test_one_user, user_batch_rating_uid)
             if FLAG == True:
                 batch_result = batch_result[:user_batch_len]
@@ -85,12 +95,10 @@ class BPR(object):
         pool.close()
         ret = result / test_user_num
         ret = list(ret)
-        p_3, ndcg, recall_5, recall_10, recall_50, mAP = \
-            ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]
+        if mode == 1: return ret
+        p_3, ndcg_3, MAP = ret[0], ret[1], ret[2]
 
-        print(
-            'val p_3 %f val ndcg %f val recall_5 %f val recall_10 %f val recall_50 %f  val mAP %f'
-            % (p_3, ndcg, recall_5, recall_10, recall_50, mAP))
+        print('\nPrecision_3 %f NDCG_3 %f MAP %f' % (p_3, ndcg_3, MAP), end='')
 
 
 

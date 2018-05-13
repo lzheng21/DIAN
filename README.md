@@ -1,4 +1,4 @@
-# DIAN: A TensorFlow Library for Implicit Data Recommendation
+# Dian: A TensorFlow Library for Implicit Data Recommendation
 
 
 ### Installation

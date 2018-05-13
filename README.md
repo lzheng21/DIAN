@@ -16,12 +16,12 @@ TensorFlow 1.5.0
 NumPy >= 1.4.0
 
 ### Input Data Format
-####train file:
+#### train file:
 uid1 iid_1 iid_2 ...
 
 uid2 iid_5 iid_3 ...
 
-####test file:
+#### test file:
 uid1 iid_3 iid_4 ...
 
 uid2 iid_7 iid_8 ...
@@ -38,7 +38,7 @@ model.train(200, lr=0.01, optimizer='Adam')
 
 model.predict()
 
-###Performance
+### Performance
     Model   Precision@3 NDCG@3  MAP
     BPR     0.27        0.26    0.23
 

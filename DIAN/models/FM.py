@@ -50,7 +50,7 @@ class FM(object):
         # interaction factors, randomly initialized
         self.V = tf.Variable(tf.random_normal([self.k, user_emb_dim+item_emb_dim], stddev=0.01))
         # estimate of y, initialized to 0.
-        self.X = tf.concat([self.u_embeddings,self.i_embeddings],axis=[1])
+        self.X = tf.concat([self.u_embeddings,self.i_embeddings],axis=1)
         #build
         self.linear_terms = tf.add(self.w0,
                               tf.reduce_sum(
@@ -64,15 +64,16 @@ class FM(object):
                                         1, keep_dims=True)))
         self.y_hat = tf.add(self.linear_terms, self.interactions)
 
-        self.loss = tf.losses.mean_squared_error(self.labels,self.y_hat) + \
+        self.loss = tf.losses.mean_squared_error(self.labels,tf.squeeze(self.y_hat)) + \
                     lambda_u * tf.nn.l2_loss(self.u_embeddings) + lambda_v * tf.nn.l2_loss(self.i_embeddings)
         self.params = [self.user_embeddings, self.item_embeddings, self.w0, self.W, self.V]
 
         FIRST = True
         for uid in tf.unstack(self.users):
             u_embedding = tf.gather(self.user_embeddings,uid)
-            u_embeddings = tf.concat([u_embedding]*self.n_items,axis=[1])
-            X = tf.concat([u_embeddings,self.item_embeddings],axis=[1])
+            u_embedding = tf.expand_dims(u_embedding,0)
+            u_embedding_copy = tf.concat([u_embedding]*self.n_items,axis=0)
+            X = tf.concat([u_embedding_copy,self.item_embeddings],axis=1)
             linear_terms = tf.add(self.w0,
                                        tf.reduce_sum(
                                            tf.multiply(self.W, X), 1, keep_dims=True))
@@ -87,7 +88,9 @@ class FM(object):
             if FIRST:
                 self.all_ratings = self.ratings_one_user
                 FIRST = False
-            self.all_ratings = tf.stack([self.all_ratings,self.ratings_one_user])
+            else:
+                self.all_ratings = tf.concat([self.all_ratings,self.ratings_one_user],axis=1)
+        self.all_ratings = tf.transpose(self.all_ratings)
 
 
 
@@ -110,7 +113,7 @@ class FM(object):
         for epoch in range(n_epoch):
             users, items, labels = self.data.sample(batch_size=self.batch_size)
             #add weight
-            labels *= [l*self.weights[1] for l in labels]
+            labels = [l*self.weights[l] for l in labels]
             _, loss = self.sess.run([self.updates, self.loss],
                                    feed_dict={self.users: users,
                                               self.items: items,
@@ -137,11 +140,11 @@ class FM(object):
             index += self.batch_size
             FLAG = False
             if len(user_batch) < self.batch_size:
-                user_batch += [0] * (self.batch_size - len(user_batch))
                 user_batch_len = len(user_batch)
+                user_batch += [0] * (self.batch_size - len(user_batch))
                 FLAG = True
             user_batch_rating = self.sess.run(self.all_ratings, {self.users: user_batch})
-            user_batch_rating_uid = zip(user_batch_rating, user_batch, [self.data] * self.batch_size)
+            user_batch_rating_uid = zip(user_batch_rating, user_batch, [self.data] * self.batch_size, [mode]*self.batch_size)
             batch_result = pool.map(ut.test_one_user, user_batch_rating_uid)
             if FLAG == True:
                 batch_result = batch_result[:user_batch_len]

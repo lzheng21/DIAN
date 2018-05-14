@@ -64,10 +64,10 @@ class Data(object):
 
     def sample(self, batch_size):
         users, items, labels = [], [], []
-        if batch_size <= self.n_users:
-            uids = rd.sample(range(self.n_users), batch_size)
+        if int(batch_size/2) <= self.n_users:
+            uids = rd.sample(range(self.n_users), int(batch_size/2))
         else:
-            uids = [rd.choice(range(self.n_users)) for _ in range(batch_size)]
+            uids = [rd.choice(range(self.n_users)) for _ in range(int(batch_size/2))]
 
         for u in uids:
             pos_item = self.sample_pos_item_for_u(u)
@@ -75,6 +75,12 @@ class Data(object):
 
             users, items, labels = users+[u], items+[pos_item], labels+[1]
             users, items, labels = users+[u], items+[neg_item], labels+[0]
+        if len(users) < batch_size:
+            uid = rd.choice(range(self.n_users))
+            users, items, labels = users + [uid], items + [self.sample_pos_item_for_u(uid)], labels + [1]
+        users = np.squeeze(np.asarray(users))
+        items = np.squeeze(np.asarray(items))
+        labels = np.squeeze(np.asarray(labels))
         return users, items, labels
 
     def sample_pos_item_for_u(self, u):

@@ -1,8 +1,9 @@
 from DIAN.data import *
 from DIAN.models.BPR import BPR
+from DIAN.models.FM import FM
 
-data = Data(train_file='data/'+'train_users.dat', test_file='data/'+'test_users.dat')
+data = Data(train_file='data/ml-100k/'+'train_users.dat', test_file='data/ml-100k/'+'test_users.dat')
 
-model = BPR(data, emb_dim=64, batch_size=1024, lambda_u=0.02, lambda_v=0.02)
-model.train(6000, lr=0.01, optimizer='Adam')
+model = FM(data,16,16,4,1024,{0:1,1:50},0.01,0.01)
+model.train(6000, lr=0.001, optimizer='Adam')
 model.predict()

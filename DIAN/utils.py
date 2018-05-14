@@ -11,7 +11,7 @@ def test_one_user(x):
     #user u's items in the training set
     training_items = data_generator.train_items[u]
     #user u's items in the test set
-    user_pos_test = data_generator.test_set[u] + data_generator.val_set[u]#data_generator.test_set[u] if mode == 0 else data_generator.val_set[u]
+    user_pos_test = data_generator.test_set[u] if mode == 0 else data_generator.val_set[u]
 
     all_items = set(range(data_generator.n_items))
 

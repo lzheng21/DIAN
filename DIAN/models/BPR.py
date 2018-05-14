@@ -82,8 +82,8 @@ class BPR(object):
             index += self.batch_size
             FLAG = False
             if len(user_batch) < self.batch_size:
-                user_batch += [0] * (self.batch_size - len(user_batch))
                 user_batch_len = len(user_batch)
+                user_batch += [0] * (self.batch_size - len(user_batch))
                 FLAG = True
             user_batch_rating = self.sess.run(self.all_ratings, {self.users: user_batch})
             user_batch_rating_uid = zip(user_batch_rating, user_batch, [self.data] * self.batch_size, [mode]*self.batch_size)

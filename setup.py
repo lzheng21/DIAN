@@ -7,6 +7,6 @@ setup(
     author='Lei Zheng',
     author_email='lzheng21@uic.edu',
     license='MIT',
-    package=['dian'],
+    package=['DIAN'],
     zip_safe=False
 )

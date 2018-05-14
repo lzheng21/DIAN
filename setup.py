@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(
-    name='Dian',
+    name='DIAN',
     version='0.1',
     description='A TensorFlow Library for Implicit Data Recommendation',
     url='https://github.com/lzheng21/DIAN.git',

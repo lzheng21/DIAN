@@ -3,7 +3,7 @@ import multiprocessing
 import numpy as np
 
 from DIAN.losses import *
-from Dian import utils as ut
+from DIAN import utils as ut
 
 
 class FM(object):

@@ -1,5 +1,5 @@
-from DIAN.load_data import *
-from DIAN.models.BPR import *
+from DIAN.data import *
+from DIAN.models.BPR import BPR
 
 data = Data(train_file='data/'+'train_users.dat', test_file='data/'+'test_users.dat')
 

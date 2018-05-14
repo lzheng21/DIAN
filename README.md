@@ -1,19 +1,19 @@
-# Dian: A TensorFlow Library for Implicit Data Recommendation
+# DIAN: A TensorFlow Library for Implicit Data Recommendation
 
 
 ### Installation
-pip install git+git://github.com/lzheng21/DIAN.git
+    git clone https://github.com/lzheng21/DIAN.git
+    cd DIAN
+    python setup.py install
 
 ### Supported Models
-Bayesian Personalized Ranking (https://arxiv.org/abs/1205.2618)
+    Bayesian Personalized Ranking (https://arxiv.org/abs/1205.2618)
 
-Factorization Machines (https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
+    Factorization Machines (https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
 ### Dependencies
-Python 3.5
-
-TensorFlow 1.5.0
-
-NumPy >= 1.4.0
+    Python 3.5
+    TensorFlow 1.5.0
+    NumPy >= 1.4.0
 
 ### Input Data Format
 #### train file:

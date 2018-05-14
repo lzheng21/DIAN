@@ -2,8 +2,8 @@ import multiprocessing
 
 import numpy as np
 
+from DIAN.losses import *
 from Dian import utils as ut
-from Dian.losses import *
 
 
 class BPR(object):

@@ -25,8 +25,8 @@
     uid2 iid_7 iid_8 ...
 
 ### Usage
-    from load_data import *
-    from models.BPR import *
+    from DIAN.data import Data
+    from DIAN.models.BPR import BPR
     data = Data(train_file='data/ml-1m/'+'train_users.dat', test_file='data/ml-1m/'+'test_users.dat')
     model = BPR(data, emb_dim=16, batch_size=1024)
     model.train(200, lr=0.01, optimizer='Adam')

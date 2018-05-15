@@ -31,18 +31,14 @@ def test_one_user(x):
         else:
             r.append(0)
 
-    p_3 = np.mean(r[:3])
-
-    ndcg_3 = ndcg_at_k(r, 3)
-
-    ap = average_precision(r)
 
 
-    return np.array([p_3, ndcg_3, ap])
+    hr_20 = recall_at_k(r, 20, len(user_pos_test))
+    ap_20 = average_precision(r,20)
+
+    return np.array([hr_20, ap_20])
 
 
-def recall(rank, ground_truth, N):
-    return len(set(rank[:N]) & set(ground_truth)) / float(len(set(ground_truth)))
 
 def precision_at_k(r, k):
     """Score is precision @ k
@@ -57,17 +53,17 @@ def precision_at_k(r, k):
     return np.mean(r)
 
 
-def average_precision(r):
+def average_precision(r,cut):
     """Score is average precision (area under PR curve)
     Relevance is binary (nonzero is relevant).
     Returns:
         Average precision
     """
     r = np.asarray(r)
-    out = [precision_at_k(r, k + 1) for k in range(r.size) if r[k]]
+    out = [precision_at_k(r, k + 1) for k in range(cut) if r[k]]
     if not out:
         return 0.
-    return np.mean(out)
+    return np.sum(out)/float(np.sum(r))#float(min(cut, np.sum(r)))
 
 
 def mean_average_precision(rs):

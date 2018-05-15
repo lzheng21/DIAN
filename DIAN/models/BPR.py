@@ -59,14 +59,14 @@ class BPR(object):
                                               self.neg_items: neg_items})
 
             ret = self.predict(mode=1)
-            p_3, ndcg_3, MAP = ret[0], ret[1], ret[2]
-            print('\rEpoch %d training loss %f val Precision_3 %f val NDCG_3 %f val MAP %f' % \
-                  (epoch, loss, p_3, ndcg_3, MAP), end='')
+            hr_20, MAP_20 = ret[0], ret[1]
+
+            print('\rEpoch %d loss %f HitRatio@20 %f MAP@20 %f' % (epoch, loss, hr_20, MAP_20), end='')
 
 
 
     def predict(self,mode=0):
-        result = np.array([0.] * 3)
+        result = np.array([0.] * 2)
         cores = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(cores)
 
@@ -97,9 +97,9 @@ class BPR(object):
         ret = result / test_user_num
         ret = list(ret)
         if mode == 1: return ret
-        p_3, ndcg_3, MAP = ret[0], ret[1], ret[2]
+        hr_20, MAP_20 = ret[0], ret[1]
 
-        print('\nPrecision_3 %f NDCG_3 %f MAP %f' % (p_3, ndcg_3, MAP), end='')
+        print('\nHit Ratio@20 %f MAP@20 %f' % (hr_20, MAP_20), end='')
 
 
 

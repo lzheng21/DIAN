@@ -33,6 +33,7 @@
     model.predict()
     
 ### Performance
-    Model   Precision@3 NDCG@3  MAP
-    BPR     0.27        0.26    0.23
+    Model   HitRatio@20 MAP@20
+    BPR     0.20        0.06
+    FM      0.18        0.04
 

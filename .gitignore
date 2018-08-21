@@ -1,0 +1,5 @@
+.idea/
+DIAN/__pycache__/
+DIAN/models/__pycache__/
+data/preprocess.py
+data/u.data
